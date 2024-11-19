@@ -29,7 +29,7 @@
                 <i data-feather="package" class="text-purple-500 w-8 h-8"></i>
                 <div>
                     <div class="text-sm font-medium">Active Deliveries</div>
-                    <div class="text-2xl font-bold">{{ deliveries|selectattr('status', 'equalto', 'In Progress')|list|length }}</div>
+                    <div class="text-2xl font-bold" id="activeDeliveries">{{ robot_status.active_deliveries }}</div>
                 </div>
             </div>
         </div>
@@ -43,11 +43,11 @@
         <div class="p-4">
             <form id="deliveryForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" name="pickup_location" placeholder="Pickup Location" 
-                       class="border rounded p-2">
+                       class="border rounded p-2" required>
                 <input type="text" name="delivery_location" placeholder="Delivery Location" 
-                       class="border rounded p-2">
+                       class="border rounded p-2" required>
                 <input type="text" name="item_description" placeholder="Item Description" 
-                       class="border rounded p-2 md:col-span-2">
+                       class="border rounded p-2 md:col-span-2" required>
                 <button type="submit" 
                         class="bg-blue-500 text-white rounded p-2 flex items-center justify-center md:col-span-2">
                     <i data-feather="package" class="w-4 h-4 mr-2"></i>
@@ -64,7 +64,7 @@
         </div>
         <div class="divide-y" id="deliveriesList">
             {% for delivery in deliveries %}
-            <div class="p-4 flex items-center justify-between">
+            <div class="p-4 flex items-center justify-between" id="delivery-{{ delivery.id }}">
                 <div>
                     <div class="font-medium">
                         From: {{ delivery.pickup_location }} → To: {{ delivery.delivery_location }}
@@ -75,14 +75,24 @@
                     <span class="px-3 py-1 rounded-full text-sm 
                         {% if delivery.status == 'In Progress' %}
                             bg-blue-100 text-blue-800
+                        {% elif delivery.status == 'Completed' %}
+                            bg-green-100 text-green-800
                         {% else %}
                             bg-gray-100 text-gray-800
                         {% endif %}">
                         {{ delivery.status }}
                     </span>
-                    <button class="text-gray-500 hover:text-gray-700">
-                        <i data-feather="alert-circle" class="w-4 h-4"></i>
+                    {% if delivery.status == 'Queued' %}
+                    <button onclick="updateStatus({{ delivery.id }}, 'In Progress')" 
+                            class="bg-blue-500 text-white rounded px-2 py-1 text-sm">
+                        Start
                     </button>
+                    {% elif delivery.status == 'In Progress' %}
+                    <button onclick="updateStatus({{ delivery.id }}, 'Completed')"
+                            class="bg-green-500 text-white rounded px-2 py-1 text-sm">
+                        Complete
+                    </button>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -91,6 +101,34 @@
 </div>
 
 <script>
+// Function to update the active deliveries count
+function updateActiveDeliveriesCount(count) {
+    document.getElementById('activeDeliveries').textContent = count;
+}
+
+// Function to update delivery status
+async function updateStatus(deliveryId, newStatus) {
+    try {
+        const response = await fetch(`/api/delivery/${deliveryId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            updateActiveDeliveriesCount(data.active_deliveries);
+            // Reload the page to update the UI
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Handle new delivery form submission
 document.getElementById('deliveryForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -110,6 +148,8 @@ document.getElementById('deliveryForm').addEventListener('submit', async (e) => 
         });
         
         if (response.ok) {
+            const responseData = await response.json();
+            updateActiveDeliveriesCount(responseData.active_deliveries);
             window.location.reload();
         }
     } catch (error) {
