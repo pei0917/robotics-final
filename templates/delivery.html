@@ -1,0 +1,131 @@
+<!-- templates/delivery.html -->
+{% extends "base.html" %}
+{% from 'components.html' import status_cards %}
+{% block content %}
+<div class="p-4 max-w-4xl mx-auto">
+    <a href="{{ url_for('home') }}" class="inline-flex items-center mb-4 text-blue-500 hover:text-blue-700">
+        <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i>
+        Back to Main Page
+    </a>
+    
+    {{ status_cards(robot_status, 'delivery') }}
+
+    <!-- New Delivery Form -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-4 border-b">
+            <h2 class="text-lg font-semibold">New Delivery</h2>
+        </div>
+        <div class="p-4">
+            <form id="taskForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" data-type="delivery">
+                <input type="text" name="pickup_location" placeholder="Pickup Location" 
+                       class="border rounded p-2" required>
+                <input type="text" name="delivery_location" placeholder="Delivery Location" 
+                       class="border rounded p-2" required>
+                <input type="text" name="item_description" placeholder="Item Description" 
+                       class="border rounded p-2 md:col-span-2" required>
+                <button type="submit" 
+                        class="bg-blue-500 text-white rounded p-2 flex items-center justify-center md:col-span-2">
+                    <i data-feather="package" class="w-4 h-4 mr-2"></i>
+                    Create Delivery Task
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b">
+            <h2 class="text-lg font-semibold">Active Tasks</h2>
+        </div>
+        <div class="divide-y" id="tasksList">
+            {% for task in tasks %}
+            <div class="p-4 flex items-center justify-between" id="task-{{ task.id }}">
+                <div>
+                    <div class="font-medium">
+                        From: {{ task.pickup_location }} → To: {{ task.delivery_location }}
+                    </div>
+                    <div class="text-sm text-gray-500">Item: {{ task.item_description }}</div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="px-3 py-1 rounded-full text-sm 
+                        {% if task.status == 'In Progress' %}
+                            bg-blue-100 text-blue-800
+                        {% elif task.status == 'Completed' %}
+                            bg-green-100 text-green-800
+                        {% else %}
+                            bg-gray-100 text-gray-800
+                        {% endif %}">
+                        {{ task.status }}
+                    </span>
+                    {% if task.status == 'Queued' %}
+                    <button onclick="updateStatus({{ task.id }}, 'In Progress', 'delivery')" 
+                            class="bg-blue-500 text-white rounded px-2 py-1 text-sm">
+                        Start
+                    </button>
+                    {% elif task.status == 'In Progress' %}
+                    <button onclick="updateStatus({{ task.id }}, 'Completed', 'delivery')"
+                            class="bg-green-500 text-white rounded px-2 py-1 text-sm">
+                        Complete
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Function to update the active tasks count
+function updateActiveTasksCount(count) {
+    document.getElementById('activeTasks').textContent = count;
+}
+
+// Function to update task status
+async function updateStatus(taskId, newStatus, taskType) {
+    try {
+        const response = await fetch(`/api/${taskType}/${taskId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            updateActiveTasksCount(data.active_tasks);
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Handle form submission
+document.getElementById('taskForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const taskType = e.target.dataset.type;
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await fetch(`/api/${taskType}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            const responseData = await response.json();
+            updateActiveTasksCount(responseData.active_tasks);
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+</script>
+{% endblock %}

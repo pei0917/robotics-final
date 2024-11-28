@@ -1,0 +1,24 @@
+<!-- templates/home.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
+        <h1 class="text-3xl font-bold text-center mb-4 flex items-center justify-center gap-2">
+            Hello! <i data-feather="smile"></i>
+        </h1>
+        <p class="text-xl text-center mb-8">
+            How can I assist you today?
+        </p>
+        <div class="space-y-4">
+            <a href="{{ url_for('navigation') }}" 
+               class="block w-full bg-blue-500 text-white rounded-lg px-4 py-3 text-center font-medium hover:bg-blue-600 transition-colors">
+                Navigation Mode
+            </a>
+            <a href="{{ url_for('delivery') }}" 
+               class="block w-full bg-green-500 text-white rounded-lg px-4 py-3 text-center font-medium hover:bg-green-600 transition-colors">
+                Delivery Mode
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
