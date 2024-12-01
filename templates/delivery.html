@@ -12,17 +12,53 @@
 
     <!-- New Delivery Form -->
     <div class="bg-white rounded-lg shadow mb-6">
-        <div class="p-4 border-b">
-            <h2 class="text-lg font-semibold">New Delivery</h2>
+        <div class="p-4 border-b flex justify-between items-center">
+            <h2 class="text-lg font-semibold">New Delivery Task</h2>
+            <button id="clear-button" 
+                    class="bg-red-500 text-white py-2 px-4 rounded flex items-center hover:bg-red-600">
+                <i data-feather="x-circle" class="w-4 h-4 mr-2"></i>
+                Clear
+            </button>
         </div>
         <div class="p-4">
             <form id="taskForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" data-type="delivery">
-                <input type="text" name="pickup_location" placeholder="Pickup Location" 
-                       class="border rounded p-2" required>
-                <input type="text" name="delivery_location" placeholder="Delivery Location" 
-                       class="border rounded p-2" required>
-                <input type="text" name="item_description" placeholder="Item Description" 
-                       class="border rounded p-2 md:col-span-2" required>
+                <div class="relative">
+                    <select id="delivery-location" 
+                            name="delivery_location" 
+                            class="border rounded p-2 w-full appearance-none" 
+                            required>
+                        <option value="" disabled selected>Select Delivery Location</option>
+                        <option value="Shoe Area">Shoe Area</option>
+                        <option value="Bottle Area">Bottle Area</option>
+                        <option value="Lamp Area">Lamp Area</option>
+                        <option value="Tissue Area">Tissue Area</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="relative">
+                    <select id="item-description" 
+                            name="item_description" 
+                            class="border rounded p-2 w-full appearance-none" 
+                            required>
+                        <option value="" disabled selected>Select Delivery Item</option>
+                        <option data-location="Shoe Area" value="Shoe_1">Shoe_1</option>
+                        <option data-location="Shoe Area" value="Shoe_2">Shoe_2</option>
+                        <option data-location="Shoe Area" value="Shoe_3">Shoe_3</option>
+                        <option data-location="Bottle Area" value="Bottle_1">Bottle_1</option>
+                        <option data-location="Bottle Area" value="Bottle_2">Bottle_2</option>
+                        <option data-location="Lamp Area" value="Lamp_1">Lamp_1</option>
+                        <option data-location="Tissue Area" value="Tissue_1">Tissue_1</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                        </svg>
+                    </div>
+                </div>
                 <button type="submit" 
                         class="bg-blue-500 text-white rounded p-2 flex items-center justify-center md:col-span-2">
                     <i data-feather="package" class="w-4 h-4 mr-2"></i>
@@ -42,7 +78,7 @@
             <div class="p-4 flex items-center justify-between" id="task-{{ task.id }}">
                 <div>
                     <div class="font-medium">
-                        From: {{ task.pickup_location }} → To: {{ task.delivery_location }}
+                        From: Stock → To: {{ task.delivery_location }}
                     </div>
                     <div class="text-sm text-gray-500">Item: {{ task.item_description }}</div>
                 </div>
@@ -126,6 +162,50 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Error:', error);
     }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const locationSelect = document.getElementById('delivery-location');
+    const itemSelect = document.getElementById('item-description');
+    const clearButton = document.getElementById('clear-button');
+
+    // Store all item options for reset purposes
+    const allOptions = Array.from(itemSelect.options);
+
+    // Filter item options based on the selected location
+    locationSelect.addEventListener('change', () => {
+        const selectedLocation = locationSelect.value;
+
+        // Filter options
+        const filteredOptions = allOptions.filter(option => {
+            return option.dataset.location === selectedLocation || option.value === "";
+        });
+
+        // Update item options
+        itemSelect.innerHTML = ""; // Clear current options
+        filteredOptions.forEach(option => itemSelect.appendChild(option)); // Add filtered options
+    });
+
+    // Automatically select the corresponding area when an item is selected
+    itemSelect.addEventListener('change', () => {
+        const selectedItem = itemSelect.selectedOptions[0]; // Get the selected item
+        const correspondingLocation = selectedItem.dataset.location; // Get the item's location
+
+        // If no location is selected, set it automatically
+        if (!locationSelect.value && correspondingLocation) {
+            locationSelect.value = correspondingLocation;
+
+            // Trigger the 'change' event to update the second dropdown based on the selected location
+            locationSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Reset filters on the Clear button click
+    clearButton.addEventListener('click', () => {
+        locationSelect.value = ""; // Reset the first dropdown
+        itemSelect.value = ""; // Reset the second dropdown
+        allOptions.forEach(option => itemSelect.appendChild(option)); // Restore all options
+    });
 });
 </script>
 {% endblock %}

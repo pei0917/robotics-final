@@ -13,7 +13,6 @@ migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 class Delivery(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    pickup_location = db.Column(db.String(100), nullable=False)
     delivery_location = db.Column(db.String(100), nullable=False)
     item_description = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(20), default='Queued')
@@ -65,7 +64,6 @@ def navigation():
 def create_delivery():
     data = request.json
     new_task = Delivery(
-        pickup_location=data['pickup_location'],
         delivery_location=data['delivery_location'],
         item_description=data['item_description']
     )
