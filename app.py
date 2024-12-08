@@ -11,18 +11,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
-class Delivery(db.Model):
+class Restock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    delivery_location = db.Column(db.String(100), nullable=False)
-    item_description = db.Column(db.String(200), nullable=False)
+    target_area = db.Column(db.String(100), nullable=False)
+    target_product = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(20), default='Queued')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Navigation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_location = db.Column(db.String(100), nullable=False)
     target_area = db.Column(db.String(100), nullable=False)
-    user_name = db.Column(db.String(200), nullable=True)
+    target_product = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(20), default='Queued')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -38,16 +37,16 @@ def get_active_count(model):
 def home():
     return render_template('home.html')
 
-@app.route('/delivery')
-def delivery():
-    deliveries = Delivery.query.all()
+@app.route('/restock')
+def restock():
+    deliveries = Restock.query.all()
     robot_status = get_robot_status()
-    robot_status['status'] = "Delivery Mode"
-    robot_status['active_tasks'] = get_active_count(Delivery)
-    return render_template('delivery.html', 
+    robot_status['status'] = "Restocking"
+    robot_status['active_tasks'] = get_active_count(Restock)
+    return render_template('restock.html', 
                          tasks=deliveries,
                          robot_status=robot_status,
-                         page_type="delivery")
+                         page_type="restock")
 
 @app.route('/navigation')
 def navigation():
@@ -60,28 +59,27 @@ def navigation():
                          robot_status=robot_status,
                          page_type="navigation")
 
-@app.route('/api/delivery', methods=['POST'])
-def create_delivery():
+@app.route('/api/restock', methods=['POST'])
+def create_restock():
     data = request.json
-    new_task = Delivery(
-        delivery_location=data['delivery_location'],
-        item_description=data['item_description']
+    new_task = Restock(
+        target_area=data['target_area'],
+        target_product=data['target_product']
     )
     db.session.add(new_task)
     db.session.commit()
     return jsonify({
         'status': 'success',
         'id': new_task.id,
-        'active_tasks': get_active_count(Delivery)
+        'active_tasks': get_active_count(Restock)
     })
 
 @app.route('/api/navigation', methods=['POST'])
 def create_navigation():
     data = request.json
     new_task = Navigation(
-        user_location=data['user_location'],
         target_area=data['target_area'],
-        user_name=data.get('user_name') 
+        target_product=data['target_product']
     )
     db.session.add(new_task)
     db.session.commit()
@@ -93,7 +91,7 @@ def create_navigation():
 
 @app.route('/api/<task_type>/<int:task_id>/status', methods=['POST'])
 def update_task_status(task_type, task_id):
-    Model = Delivery if task_type == 'delivery' else Navigation
+    Model = Restock if task_type == 'restock' else Navigation
     task = Model.query.get_or_404(task_id)
     data = request.json
     task.status = data['status']

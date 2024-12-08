@@ -1,4 +1,4 @@
-<!-- templates/delivery.html -->
+<!-- templates/restock.html -->
 {% extends "base.html" %}
 {% from 'components.html' import status_cards %}
 {% block content %}
@@ -8,12 +8,12 @@
         Back to Main Page
     </a>
     
-    {{ status_cards(robot_status, 'delivery') }}
+    {{ status_cards(robot_status, 'restock') }}
 
-    <!-- New Delivery Form -->
+    <!-- New Restock Form -->
     <div class="bg-white rounded-lg shadow mb-6">
         <div class="p-4 border-b flex justify-between items-center">
-            <h2 class="text-lg font-semibold">New Delivery Task</h2>
+            <h2 class="text-lg font-semibold">New Restock Task</h2>
             <button id="clear-button" 
                     class="bg-red-500 text-white py-2 px-4 rounded flex items-center hover:bg-red-600">
                 <i data-feather="x-circle" class="w-4 h-4 mr-2"></i>
@@ -21,13 +21,14 @@
             </button>
         </div>
         <div class="p-4">
-            <form id="taskForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" data-type="delivery">
+            <form id="taskForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" data-type="restock">
                 <div class="relative">
-                    <select id="delivery-location" 
-                            name="delivery_location" 
+                    <select id="target_area"
+                            name="target_area" 
                             class="border rounded p-2 w-full appearance-none" 
                             required>
-                        <option value="" disabled selected>Select Delivery Location</option>
+                        <option value="" disabled selected>Select Target Area</option>
+                        <option value="Entrance">Entrance</option>
                         <option value="Shoe Area">Shoe Area</option>
                         <option value="Bottle Area">Bottle Area</option>
                         <option value="Lamp Area">Lamp Area</option>
@@ -40,11 +41,11 @@
                     </div>
                 </div>
                 <div class="relative">
-                    <select id="item-description" 
-                            name="item_description" 
+                    <select id="target_product" 
+                            name="target_product" 
                             class="border rounded p-2 w-full appearance-none" 
                             required>
-                        <option value="" disabled selected>Select Delivery Item</option>
+                        <option value="" disabled selected>Select Target Product</option>
                         <option data-location="Shoe Area" value="Shoe_1">Shoe_1</option>
                         <option data-location="Shoe Area" value="Shoe_2">Shoe_2</option>
                         <option data-location="Shoe Area" value="Shoe_3">Shoe_3</option>
@@ -62,7 +63,7 @@
                 <button type="submit" 
                         class="bg-blue-500 text-white rounded p-2 flex items-center justify-center md:col-span-2">
                     <i data-feather="package" class="w-4 h-4 mr-2"></i>
-                    Create Delivery Task
+                    Create Restocking Task
                 </button>
             </form>
         </div>
@@ -78,9 +79,9 @@
             <div class="p-4 flex items-center justify-between" id="task-{{ task.id }}">
                 <div>
                     <div class="font-medium">
-                        From: Stock → To: {{ task.delivery_location }}
+                        Go to: {{ task.target_area }}
                     </div>
-                    <div class="text-sm text-gray-500">Item: {{ task.item_description }}</div>
+                    <div class="text-sm text-gray-500">Item: {{ task.target_product }}</div>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="px-3 py-1 rounded-full text-sm 
@@ -94,12 +95,12 @@
                         {{ task.status }}
                     </span>
                     {% if task.status == 'Queued' %}
-                    <button onclick="updateStatus({{ task.id }}, 'In Progress', 'delivery')" 
+                    <button onclick="updateStatus({{ task.id }}, 'In Progress', 'restock')" 
                             class="bg-blue-500 text-white rounded px-2 py-1 text-sm">
                         Start
                     </button>
                     {% elif task.status == 'In Progress' %}
-                    <button onclick="updateStatus({{ task.id }}, 'Completed', 'delivery')"
+                    <button onclick="updateStatus({{ task.id }}, 'Completed', 'restock')"
                             class="bg-green-500 text-white rounded px-2 py-1 text-sm">
                         Complete
                     </button>
@@ -165,8 +166,8 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const locationSelect = document.getElementById('delivery-location');
-    const itemSelect = document.getElementById('item-description');
+    const locationSelect = document.getElementById('target_area');
+    const itemSelect = document.getElementById('target_product');
     const clearButton = document.getElementById('clear-button');
 
     // Store all item options for reset purposes

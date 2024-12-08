@@ -22,33 +22,8 @@
         </div>
         <div class="p-4">
             <form id="taskForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" data-type="navigation">
-                <!-- Current Location -->
                 <div class="relative">
-                    <select id="user-location"
-                            name="user_location" 
-                            class="border rounded p-2 w-full appearance-none" 
-                            required>
-                        <option value="" disabled selected>Select Current Location</option>
-                        <option value="Entrance">Entrance</option>
-                        <option value="Shoe Area">Shoe Area</option>
-                        <option value="Bottle Area">Bottle Area</option>
-                        <option value="Lamp Area">Lamp Area</option>
-                        <option value="Tissue Area">Tissue Area</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- User Name -->
-                <input type="text" name="user_name" placeholder="Your Name" 
-                    class="border rounded p-2 w-full">
-
-                <!-- Target Location -->
-                <div class="relative">
-                    <select id="target-area"
+                    <select id="target_area"
                             name="target_area" 
                             class="border rounded p-2 w-full appearance-none" 
                             required>
@@ -65,14 +40,13 @@
                         </svg>
                     </div>
                 </div>
-
-                <!-- Target Product -->
                 <div class="relative">
-                    <select id="target-product" 
+                    <select id="target_product" 
                             name="target_product" 
                             class="border rounded p-2 w-full appearance-none" 
                             required>
                         <option value="" disabled selected>Select Target Product</option>
+                        <option data-location="Entrance" value="None">None</option>
                         <option data-location="Shoe Area" value="Shoe_1">Shoe_1</option>
                         <option data-location="Shoe Area" value="Shoe_2">Shoe_2</option>
                         <option data-location="Shoe Area" value="Shoe_3">Shoe_3</option>
@@ -87,7 +61,6 @@
                         </svg>
                     </div>
                 </div>
-
                 <button type="submit" 
                         class="bg-blue-500 text-white rounded p-2 flex items-center justify-center md:col-span-2">
                     <i data-feather="navigation" class="w-4 h-4 mr-2"></i>
@@ -107,11 +80,9 @@
             <div class="p-4 flex items-center justify-between" id="task-{{ task.id }}">
                 <div>
                     <div class="font-medium">
-                        From: {{ task.user_location }} → To: {{ task.target_area }}
+                        Go to: {{ task.target_area }}
                     </div>
-                    {% if task.user_name %}
-                        <div class="text-sm text-gray-500">User: {{ task.user_name }}</div>
-                    {% endif %}
+                    <div class="text-sm text-gray-500">Item: {{ task.target_product }}</div>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="px-3 py-1 rounded-full text-sm
@@ -195,8 +166,8 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     }
 });
 document.addEventListener('DOMContentLoaded', () => {
-    const locationSelect = document.getElementById('target-area');
-    const itemSelect = document.getElementById('target-product');
+    const locationSelect = document.getElementById('target_area');
+    const itemSelect = document.getElementById('target_product');
     const clearButton = document.getElementById('clear-button');
 
     // Store all item options for reset purposes
