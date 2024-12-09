@@ -113,10 +113,6 @@
 </div>
 
 <script>
-// Function to update the active tasks count
-function updateActiveTasksCount(count) {
-    document.getElementById('activeTasks').textContent = count;
-}
 
 // Function to update task status
 async function updateStatus(taskId, newStatus, taskType) {
@@ -138,75 +134,5 @@ async function updateStatus(taskId, newStatus, taskType) {
         console.error('Error:', error);
     }
 }
-
-// Handle form submission
-document.getElementById('taskForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const taskType = e.target.dataset.type;
-    const data = Object.fromEntries(formData.entries());
-
-    try {
-        const response = await fetch(`/api/${taskType}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-        
-        if (response.ok) {
-            const responseData = await response.json();
-            updateActiveTasksCount(responseData.active_tasks);
-            window.location.reload();
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const locationSelect = document.getElementById('target_area');
-    const itemSelect = document.getElementById('target_product');
-    const clearButton = document.getElementById('clear-button');
-
-    // Store all item options for reset purposes
-    const allOptions = Array.from(itemSelect.options);
-
-    // Filter item options based on the selected location
-    locationSelect.addEventListener('change', () => {
-        const selectedLocation = locationSelect.value;
-
-        // Filter options
-        const filteredOptions = allOptions.filter(option => {
-            return option.dataset.location === selectedLocation || option.value === "";
-        });
-
-        // Update item options
-        itemSelect.innerHTML = ""; // Clear current options
-        filteredOptions.forEach(option => itemSelect.appendChild(option)); // Add filtered options
-    });
-
-    // Automatically select the corresponding area when an item is selected
-    itemSelect.addEventListener('change', () => {
-        const selectedItem = itemSelect.selectedOptions[0]; // Get the selected item
-        const correspondingLocation = selectedItem.dataset.location; // Get the item's location
-
-        // If no location is selected, set it automatically
-        if (!locationSelect.value && correspondingLocation) {
-            locationSelect.value = correspondingLocation;
-
-            // Trigger the 'change' event to update the second dropdown based on the selected location
-            locationSelect.dispatchEvent(new Event('change'));
-        }
-    });
-
-    // Reset filters on the Clear button click
-    clearButton.addEventListener('click', () => {
-        locationSelect.value = ""; // Reset the first dropdown
-        itemSelect.value = ""; // Reset the second dropdown
-        allOptions.forEach(option => itemSelect.appendChild(option)); // Restore all options
-    });
-});
 </script>
 {% endblock %}
