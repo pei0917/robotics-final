@@ -121,7 +121,6 @@ socket.on('robot_arrived', (data) => {
 
 // Function to update task status
 async function updateStatus(taskId, newStatus, taskType, targetArea = "default1", targetProduct = "default2") {
-    console.info("HII")
     try {
         const response = await fetch(`/api/${taskType}/${taskId}/status`, {
             method: 'POST',

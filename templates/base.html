@@ -12,17 +12,16 @@
 <body class="bg-gray-100">
     <script>
         const socket = io();
-        socket.on('new_task', () => {
+        socket.on('new_task', (data) => {
             setTimeout(() => {
-                window.location.reload();
+                window.location.href = data.url;
             }, 10); 
-            // window.location.reload();
         });
     </script>
     {% block content %}{% endblock %}
-    <script src="{{ url_for('static', filename='js/functions.js') }}"></script>
     <script>
         feather.replace();
     </script>
+    <script src="{{ url_for('static', filename='js/functions.js') }}"></script>
 </body>
 </html>

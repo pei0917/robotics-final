@@ -70,7 +70,7 @@ def create_restock():
     )
     db.session.add(new_task)
     db.session.commit()
-    socketio.emit('new_task')
+    socketio.emit('new_task', {'url': '/restock'})
     return jsonify({
         'status': 'success'
     })
@@ -84,7 +84,7 @@ def create_navigation():
     )
     db.session.add(new_task)
     db.session.commit()
-    socketio.emit('new_task')
+    socketio.emit('new_task', {'url': 'navigation'})
     return jsonify({
         'status': 'success'
     })
