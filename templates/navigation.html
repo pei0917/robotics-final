@@ -114,6 +114,14 @@
 </div>
 
 <script>
+const socket = io();
+
+socket.on('robot_arrived', (data) => {
+    if (data.taskId) {
+        updateStatus(data.taskId, 'Completed', 'navigation');
+    }
+});
+
 // Function to update task status
 async function updateStatus(taskId, newStatus, taskType) {
     try {

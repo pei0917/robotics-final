@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, jsonify
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO
 from datetime import datetime
 
 app = Flask(__name__)
@@ -10,6 +11,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
+socketio = SocketIO(app)
 
 class Restock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,9 +105,31 @@ def update_task_status(task_type, task_id):
         'active_tasks': get_active_count(Model)
     })
 
+@app.route('/api/robot/arrived', methods=['POST'])
+def robot_arrived():
+    data = request.get_json()
+    task_id = data.get('task_id')
+    
+    if not task_id:
+        return jsonify({'error': 'Task ID is required'}), 400
+    
+    try:
+        socketio.emit('robot_arrived', {'taskId': task_id})
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'Robot arrived!'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error', 
+            'message': str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     with app.app_context():
         db.drop_all() # reset the database
         db.create_all()
-    app.run(debug=True)
+    socketio.run(app, debug=True)
+    # app.run(debug=True)
