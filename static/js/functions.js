@@ -3,6 +3,62 @@ function updateActiveTasksCount(count) {
     document.getElementById('activeTasks').textContent = count;
 }
 
+// Function to show completion popup
+function showCompletionPopup() {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'overlay';
+    document.body.appendChild(overlay);
+
+    // Create popup
+    const popup = document.createElement('div');
+    popup.id = 'completionPopup';
+    popup.className = 'p-6 text-center w-96';
+    popup.innerHTML = `
+        <h2 class="text-xl font-bold mb-4">We Are Arrived!</h2>
+        <p class="mb-4">What would you like to do next?</p>
+        <div class="space-y-2">
+            <button onclick="handlePopupOption(1)" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+                Create New Navigation Task
+            </button>
+            <button onclick="handlePopupOption(2)" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
+                Restock Products
+            </button>
+            <button onclick="handlePopupOption(3)" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">
+                Ask Clerk Questions
+            </button>
+            <button onclick="handlePopupOption(4)" class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+                I'm Fine Now
+            </button>
+        </div>
+    `;
+    document.body.appendChild(popup);
+}
+
+// Handle popup option selection
+function handlePopupOption(option) {
+    const overlay = document.getElementById('overlay');
+    const popup = document.getElementById('completionPopup');
+    
+    if (overlay) document.body.removeChild(overlay);
+    if (popup) document.body.removeChild(popup);
+
+    switch(option) {
+        case 1:
+            break;
+        case 2:
+            alert('We have announced the clerk to restock. You can go around and come back after 5 minutes.');
+            window.location.href = "/restock";
+            return;
+        case 3:
+            alert('We have announced the clerk. Please wait.');
+            break;
+        case 4:
+            break;
+    }
+    window.location.reload();
+}
+
 // Handle form submission
 document.getElementById('taskForm').addEventListener('submit', async (e) => {
     e.preventDefault();

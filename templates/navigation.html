@@ -29,10 +29,10 @@
                             required>
                         <option value="" disabled selected>Select Target Area</option>
                         <option value="Entrance">Entrance</option>
-                        <option value="Shoe Area">Shoe Area</option>
+                        <option value="Laptop Area">Laptop Area</option>
                         <option value="Bottle Area">Bottle Area</option>
-                        <option value="Lamp Area">Lamp Area</option>
-                        <option value="Tissue Area">Tissue Area</option>
+                        <option value="Keyboard Area">Keyboard Area</option>
+                        <option value="Cup Area">Cup Area</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -47,13 +47,13 @@
                             required>
                         <option value="" disabled selected>Select Target Product</option>
                         <option data-location="Entrance" value="None">None</option>
-                        <option data-location="Shoe Area" value="Shoe_1">Shoe_1</option>
-                        <option data-location="Shoe Area" value="Shoe_2">Shoe_2</option>
-                        <option data-location="Shoe Area" value="Shoe_3">Shoe_3</option>
+                        <option data-location="Laptop Area" value="Laptop_1">Laptop_1</option>
+                        <option data-location="Laptop Area" value="Laptop_2">Laptop_2</option>
+                        <option data-location="Laptop Area" value="Laptop_3">Laptop_3</option>
                         <option data-location="Bottle Area" value="Bottle_1">Bottle_1</option>
                         <option data-location="Bottle Area" value="Bottle_2">Bottle_2</option>
-                        <option data-location="Lamp Area" value="Lamp_1">Lamp_1</option>
-                        <option data-location="Tissue Area" value="Tissue_1">Tissue_1</option>
+                        <option data-location="Keyboard Area" value="Keyboard_1">Keyboard_1</option>
+                        <option data-location="Cup Area" value="Cup_1">Cup_1</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -114,67 +114,6 @@
 </div>
 
 <script>
-// Function to update the active tasks count
-function updateActiveTasksCount(count) {
-    document.getElementById('activeTasks').textContent = count;
-}
-
-// Function to show completion popup
-function showCompletionPopup() {
-    // Create overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'overlay';
-    document.body.appendChild(overlay);
-
-    // Create popup
-    const popup = document.createElement('div');
-    popup.id = 'completionPopup';
-    popup.className = 'p-6 text-center w-96';
-    popup.innerHTML = `
-        <h2 class="text-xl font-bold mb-4">We Are Arrived!</h2>
-        <p class="mb-4">What would you like to do next?</p>
-        <div class="space-y-2">
-            <button onclick="handlePopupOption(1)" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-                Create New Navigation Task
-            </button>
-            <button onclick="handlePopupOption(2)" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
-                Restock Products
-            </button>
-            <button onclick="handlePopupOption(3)" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">
-                Ask Clerk Questions
-            </button>
-            <button onclick="handlePopupOption(4)" class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
-                I'm Fine Now
-            </button>
-        </div>
-    `;
-    document.body.appendChild(popup);
-}
-
-// Handle popup option selection
-function handlePopupOption(option) {
-    const overlay = document.getElementById('overlay');
-    const popup = document.getElementById('completionPopup');
-    
-    if (overlay) document.body.removeChild(overlay);
-    if (popup) document.body.removeChild(popup);
-
-    switch(option) {
-        case 1:
-            break;
-        case 2:
-            alert('We have announced the clerk to restock. You can go around and come back after 5 minutes.');
-            window.location.href = "{{ url_for('restock') }}";
-            return;
-        case 3:
-            alert('We have announced the clerk. Please wait.');
-            break;
-        case 4:
-            break;
-    }
-    window.location.reload();
-}
-
 // Function to update task status
 async function updateStatus(taskId, newStatus, taskType) {
     try {
