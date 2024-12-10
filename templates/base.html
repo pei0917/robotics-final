@@ -12,6 +12,12 @@
 <body class="bg-gray-100">
     <script>
         const socket = io();
+        socket.on('new_task', () => {
+            setTimeout(() => {
+                window.location.reload();
+            }, 10); 
+            // window.location.reload();
+        });
     </script>
     {% block content %}{% endblock %}
     <script src="{{ url_for('static', filename='js/functions.js') }}"></script>

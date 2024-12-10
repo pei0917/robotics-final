@@ -70,11 +70,9 @@ def create_restock():
     )
     db.session.add(new_task)
     db.session.commit()
-    socketio.emit('new_restock')
+    socketio.emit('new_task')
     return jsonify({
-        'status': 'success',
-        'id': new_task.id,
-        'active_tasks': get_active_count(Restock)
+        'status': 'success'
     })
 
 @app.route('/api/navigation', methods=['POST'])
@@ -86,10 +84,9 @@ def create_navigation():
     )
     db.session.add(new_task)
     db.session.commit()
+    socketio.emit('new_task')
     return jsonify({
-        'status': 'success',
-        'id': new_task.id,
-        'active_tasks': get_active_count(Navigation)
+        'status': 'success'
     })
 
 @app.route('/api/<task_type>/<int:task_id>/status', methods=['POST'])

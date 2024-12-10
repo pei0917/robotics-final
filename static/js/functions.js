@@ -59,7 +59,6 @@ async function handleRestockOption(targetArea, targetProduct) {
         });
         
         if (response.ok) {
-            const responseData = await response.json();
             window.location.href = "/restock";
         }
     } catch (error) {
@@ -103,12 +102,6 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
             },
             body: JSON.stringify(data)
         });
-        
-        if (response.ok) {
-            const responseData = await response.json();
-            updateActiveTasksCount(responseData.active_tasks);
-            window.location.reload();
-        }
     } catch (error) {
         console.error('Error:', error);
     }
