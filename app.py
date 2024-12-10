@@ -70,6 +70,7 @@ def create_restock():
     )
     db.session.add(new_task)
     db.session.commit()
+    socketio.emit('new_restock')
     return jsonify({
         'status': 'success',
         'id': new_task.id,
@@ -108,13 +109,15 @@ def update_task_status(task_type, task_id):
 @app.route('/api/robot/arrived', methods=['POST'])
 def robot_arrived():
     data = request.get_json()
-    task_id = data.get('task_id')
+    task_id = data['task_id']
+    target_area = data['target_area']
+    target_prodict = data['target_product']
     
     if not task_id:
         return jsonify({'error': 'Task ID is required'}), 400
     
     try:
-        socketio.emit('robot_arrived', {'taskId': task_id})
+        socketio.emit('robot_arrived', {'taskId': task_id, 'targetArea': target_area, 'targetProduct': target_prodict})
         
         return jsonify({
             'status': 'success', 

@@ -7,4 +7,13 @@ def check_task_completion(task_id):
         return response.json()
     except Exception as e:
         print(f"Error notifying server: {e}")
-print(check_task_completion(1))
+def restock_prdouct(targer_area, target_product):
+    try:
+        response = requests.post(f'http://127.0.0.1:5000/api/restock',
+                                    json={'target_area': targer_area, 'target_product': target_product})
+        return response.json()
+    except Exception as e:
+        print(f"Error notifying server: {e}")
+
+# print(check_task_completion(1))
+print(restock_prdouct('Lamp Area', 'Lamp_1'))

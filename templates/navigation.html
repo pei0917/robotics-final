@@ -101,7 +101,7 @@
                         Start
                     </button>
                     {% elif task.status == 'In Progress' %}
-                    <button onclick="updateStatus({{ task.id }}, 'Completed', 'navigation')"
+                    <button onclick="updateStatus({{ task.id }}, 'Completed', 'navigation', '{{ task.target_area }}', '{{ task.target_product}}')"
                             class="bg-green-500 text-white rounded px-2 py-1 text-sm">
                         Complete
                     </button>
@@ -114,16 +114,14 @@
 </div>
 
 <script>
-const socket = io();
 
 socket.on('robot_arrived', (data) => {
-    if (data.taskId) {
-        updateStatus(data.taskId, 'Completed', 'navigation');
-    }
+    updateStatus(data.taskId, 'Completed', 'navigation', data.targetArea, data.targetProduct);
 });
 
 // Function to update task status
-async function updateStatus(taskId, newStatus, taskType) {
+async function updateStatus(taskId, newStatus, taskType, targetArea = "default1", targetProduct = "default2") {
+    console.info("HII")
     try {
         const response = await fetch(`/api/${taskType}/${taskId}/status`, {
             method: 'POST',
@@ -137,7 +135,7 @@ async function updateStatus(taskId, newStatus, taskType) {
             const data = await response.json();
             updateActiveTasksCount(data.active_tasks);
             if (newStatus === 'Completed') {
-                showCompletionPopup(); 
+                showCompletionPopup(targetArea, targetProduct); 
             } else {
                 window.location.reload(); 
             }

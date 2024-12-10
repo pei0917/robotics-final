@@ -4,7 +4,7 @@ function updateActiveTasksCount(count) {
 }
 
 // Function to show completion popup
-function showCompletionPopup() {
+function showCompletionPopup(targetArea, targetProduct) {
     // Create overlay
     const overlay = document.createElement('div');
     overlay.id = 'overlay';
@@ -21,7 +21,7 @@ function showCompletionPopup() {
             <button onclick="handlePopupOption(1)" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
                 Create New Navigation Task
             </button>
-            <button onclick="handlePopupOption(2)" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
+            <button onclick="handleRestockOption('${targetArea}', '${targetProduct}')" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
                 Restock Products
             </button>
             <button onclick="handlePopupOption(3)" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">
@@ -35,6 +35,38 @@ function showCompletionPopup() {
     document.body.appendChild(popup);
 }
 
+// Handle restock option selection
+async function handleRestockOption(targetArea, targetProduct) {
+
+    const overlay = document.getElementById('overlay');
+    const popup = document.getElementById('completionPopup');
+    
+    if (overlay) document.body.removeChild(overlay);
+    if (popup) document.body.removeChild(popup);
+
+    alert('We have announced the clerk to restock. You can go around and come back after 5 minutes.');
+    try {
+        const data = {
+            target_area: targetArea,
+            target_product: targetProduct
+        };
+        const response = await fetch(`/api/restock`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            const responseData = await response.json();
+            window.location.href = "/restock";
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
 // Handle popup option selection
 function handlePopupOption(option) {
     const overlay = document.getElementById('overlay');
@@ -46,15 +78,12 @@ function handlePopupOption(option) {
     switch(option) {
         case 1:
             break;
-        case 2:
-            alert('We have announced the clerk to restock. You can go around and come back after 5 minutes.');
-            window.location.href = "/restock";
-            return;
         case 3:
             alert('We have announced the clerk. Please wait.');
             break;
         case 4:
-            break;
+            window.location.href = "/";
+            return;
     }
     window.location.reload();
 }
