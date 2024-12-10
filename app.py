@@ -1,5 +1,6 @@
 # app.py
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
+from functools import wraps
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
@@ -8,6 +9,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///robot_tasks.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+SECRET_PASSWORD = 'peipei'
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
@@ -39,7 +41,26 @@ def get_active_count(model):
 def home():
     return render_template('home.html')
 
-@app.route('/restock')
+def requires_password(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.method == 'POST':
+            entered_password = request.form.get('password')
+            if entered_password == SECRET_PASSWORD:
+                return f(*args, **kwargs)
+            else:
+                return redirect(url_for('enter_password'))  # Redirect back to the password entry page
+        # If the request method is GET, show the password entry page
+        return redirect(url_for('enter_password'))
+    return decorated_function
+
+# Route to display the password entry page
+@app.route('/enter_password', methods=['GET', 'POST'])
+def enter_password():
+    return render_template('enter_password.html')
+    
+@app.route('/restock', methods=['GET', 'POST'])
+@requires_password
 def restock():
     deliveries = Restock.query.all()
     robot_status = get_robot_status()
