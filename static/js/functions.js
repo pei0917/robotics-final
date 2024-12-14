@@ -35,7 +35,7 @@ function showCompletionPopup(targetArea, targetProduct) {
             <button onclick="showPopupAndWait('We have announced the clerk. Please wait.')" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">
                 Ask Clerk Questions
             </button>
-            <button onclick="window.location.href = '/'" class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+            <button onclick="showPopupAndWait('That is great! Hope to see you soon.')" class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
                 I'm Fine Now
             </button>
         </div>
@@ -67,7 +67,7 @@ function showPopupAndWait(message) {
         const okButton = document.getElementById('popupOkButton');
         okButton.addEventListener('click', () => {
             closePopup();
-            window.location.reload();
+            window.location.href = '/';
             resolve();
         });
     });
@@ -78,7 +78,8 @@ async function handleRestockOption(targetArea, targetProduct) {
     await showPopupAndWait('We have announced the clerk to restock. You can go around and come back after 5 minutes.');
     const data = {
         target_area: targetArea,
-        target_product: targetProduct
+        target_product: targetProduct,
+        Server: true,
     };
     fetch(`/api/restock`, {
         method: 'POST',

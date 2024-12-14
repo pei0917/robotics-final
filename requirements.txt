@@ -1,7 +1,9 @@
 alembic
-Flask
-Flask_Migrate
-Flask_SocketIO
+flask
+flask_migrate
+flask_socketIO
 flask_sqlalchemy
+openni
 Requests
 SQLAlchemy
+ultralytics

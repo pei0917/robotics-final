@@ -5,6 +5,13 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 from datetime import datetime
+import requests
+import os
+from threading import Thread
+# from vision import restock_deque
+from tmp import restock_deque
+import re
+from collections import deque
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///robot_tasks.db'
@@ -14,6 +21,19 @@ SECRET_PASSWORD = 'peipei'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 socketio = SocketIO(app)
+
+item = {
+    'vase': 'Vase_1',
+    'keyboard': 'Keyboard_1',
+    'bottle': 'Bottle_1',
+    'cup': 'Cup_1',
+}
+area = {
+    'vase': 'Vase Area',
+    'keyboard': 'Keyboard Area',
+    'bottle': 'Bottle Area',
+    'cup': 'Cup Area',
+}
 
 class Restock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -37,10 +57,6 @@ def get_robot_status():
 def get_active_count(model):
     return model.query.filter_by(status='In Progress').count()
 
-@app.route('/')
-def home():
-    return render_template('home.html')
-
 def requires_password(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -49,12 +65,24 @@ def requires_password(f):
             if entered_password == SECRET_PASSWORD:
                 return f(*args, **kwargs)
             else:
-                return redirect(url_for('enter_password'))  # Redirect back to the password entry page
-        # If the request method is GET, show the password entry page
+                return redirect(url_for('enter_password'))
         return redirect(url_for('enter_password'))
     return decorated_function
 
-# Route to display the password entry page
+@app.route('/')
+def home():
+    if restock_deque:
+        product = restock_deque.popleft()
+        Area = f"{product.split('_')[0]} Area" 
+        requests.post(f'http://127.0.0.1:5000/api/restock', json={'target_area': Area, 'target_product': product, 'Server': True})
+        print("success to send restock request to ui")
+        while restock_deque:
+            product = restock_deque.popleft()
+            requests.post(f'http://127.0.0.1:5000/api/restock', json={'target_area': Area, 'target_product': product})
+        return redirect(url_for('restock'))
+    else:
+        return render_template('home.html')
+
 @app.route('/enter_password', methods=['GET', 'POST'])
 def enter_password():
     return render_template('enter_password.html')
@@ -62,6 +90,7 @@ def enter_password():
 @app.route('/restock', methods=['GET', 'POST'])
 @requires_password
 def restock():
+    restock_deque.clear()
     deliveries = Restock.query.all()
     robot_status = get_robot_status()
     robot_status['status'] = "Restocking"
@@ -89,9 +118,11 @@ def create_restock():
         target_area=data['target_area'],
         target_product=data['target_product']
     )
+    if data.get("Server"):
+        requests.post("http://127.0.0.1:5003/navigate2stock")
+    socketio.emit('new_task', {'url': '/restock'})
     db.session.add(new_task)
     db.session.commit()
-    socketio.emit('new_task', {'url': '/restock'})
     return jsonify({
         'status': 'success'
     })
@@ -117,7 +148,22 @@ def update_task_status(task_type, task_id):
     data = request.json
     task.status = data['status']
     db.session.commit()
-    
+    id = task.id
+    target_area = task.target_area
+    target_product = task.target_product
+
+    def send_post_request():
+        try:
+            requests.post(
+                "http://127.0.0.1:5003/api/set_product",
+                json={"target_area": target_area, "id": id, "task_type": task_type, "target_product": target_product}
+            )
+        except Exception as e:
+            print(f"Failed to send POST request: {e}")
+
+    if task.status == "In Progress":
+        Thread(target=send_post_request).start()
+
     return jsonify({
         'status': 'success',
         'new_status': task.status,
@@ -126,14 +172,10 @@ def update_task_status(task_type, task_id):
 
 @app.route('/api/robot/arrived', methods=['POST'])
 def robot_arrived():
-    data = request.get_json()
-    task_id = data['task_id']
+    data = request.json
+    task_id = data['id']
     target_area = data['target_area']
     target_prodict = data['target_product']
-    
-    if not task_id:
-        return jsonify({'error': 'Task ID is required'}), 400
-    
     try:
         socketio.emit('robot_arrived', {'taskId': task_id, 'targetArea': target_area, 'targetProduct': target_prodict})
         
@@ -147,6 +189,13 @@ def robot_arrived():
             'message': str(e)
         }), 500
 
+@app.route('/api/append_restock_deque', methods=['POST'])
+def add_to_restock_deque():
+    data = request.json
+    product = data['product']
+    restock_deque.append(product)
+    print(f"Successfully appended {product} into restock list via API")
+    return jsonify({"status": "success", "product": product}), 200
 
 if __name__ == '__main__':
     with app.app_context():
