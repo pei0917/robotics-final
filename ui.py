@@ -8,9 +8,8 @@ from datetime import datetime
 import requests
 import os
 from threading import Thread
-# from shared import restock_deque, coordinate_dict
-from api import restock_deque, coordinate_dict
-import re
+from shared import restock_deque, coordinate_dict
+# from api import restock_deque, coordinate_dict
 from collections import deque
 
 app = Flask(__name__)

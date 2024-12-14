@@ -2,8 +2,8 @@ import queue
 from flask import Flask, request, jsonify
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-# from shared import check_product, coordinate_dict
-from api import check_product, coordinate_dict
+from shared import check_product, coordinate_dict
+# from api import check_product, coordinate_dict
 class ServerService:
     def __init__(self, ui_port=5000, nav_port=5001, server_port=5003):
         super().__init__()
