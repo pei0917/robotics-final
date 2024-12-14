@@ -2,8 +2,9 @@ import queue
 from flask import Flask, request, jsonify
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from shared import check_product, coordinate_dict
-# from api import check_product, coordinate_dict
+from shared import Vision, coordinate_dict
+import threading
+
 class ServerService:
     def __init__(self, ui_port=5000, nav_port=5001, server_port=5003):
         super().__init__()
@@ -15,7 +16,7 @@ class ServerService:
         self.target_area = None
         self.target_product = None
         self.task = queue.Queue()
-
+        self.vision = Vision()
         self._setup_routes()
     
     def _setup_routes(self):
@@ -24,6 +25,7 @@ class ServerService:
         self.app.route('/navigate2product_end', methods=['POST'])(self.navigate2product_end)
     
     def run(self):
+        threading.Thread(target=self.vision.run, daemon=True).start()
         self.app.run(port=self.server_port, debug=True, use_reloader=False)
     
     def set_product(self):
@@ -54,7 +56,7 @@ class ServerService:
 
     def call_vision(self):
         try:
-            product = check_product(self.target_product)
+            product = self.vision.check_product(self.target_product)
             if product != "None":
                 requests.post(f'{self.UI_ENDPOINT}/api/append_restock_deque', json={'product': self.target_product})
                 print(f"Successfully call the append restock deque api to append {self.target_product}")
@@ -68,7 +70,7 @@ class ServerService:
     def execute_ui_and_vision(self):
         tasks = {
             "UI": self.call_ui,
-            "Vision": self.call_vision()
+            "Vision": self.call_vision
         }
 
         results = {}
