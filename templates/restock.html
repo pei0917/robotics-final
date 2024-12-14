@@ -114,6 +114,10 @@
 
 <script>
 
+socket.on('robot_arrived', (data) => {
+    updateStatus(data.taskId, 'Completed', 'restock', data.targetArea, data.targetProduct);
+});
+
 // Function to update task status
 async function updateStatus(taskId, newStatus, taskType) {
     try {
@@ -128,7 +132,11 @@ async function updateStatus(taskId, newStatus, taskType) {
         if (response.ok) {
             const data = await response.json();
             updateActiveTasksCount(data.active_tasks);
-            window.location.reload();
+            if (newStatus === 'Completed') {
+                showPopupAndWait('Please place the items in the basket onto the shelf.'); 
+            } else {
+                window.location.reload(); 
+            }
         }
     } catch (error) {
         console.error('Error:', error);

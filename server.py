@@ -34,6 +34,7 @@ class ServerService:
         task_type = data['task_type']
         target_product = data['target_product']
         self.task.put((target_area, id, task_type, target_product))
+        print(target_area, coordinate_dict.get(target_area))
         try:
             response = requests.post(f"{self.NAV_ENDPOINT}/navigate2product", 
                                     json={"c_product": coordinate_dict.get(target_area)})
@@ -101,10 +102,11 @@ class ServerService:
         self.target_product = target_product
         
         if task_type == "restock":
-            return ({"status": "success"}), 200
+            results = self.call_ui()
+            return ({"status": "success", "ui_result": results}), 200
         else:
             results = self.execute_ui_and_vision()
-            return ({"status": "success","combined_result": results}), 200
+            return ({"status": "success", "combined_result": results}), 200
 
     def navigate2stock(self):
         print("Start navigate to stock")

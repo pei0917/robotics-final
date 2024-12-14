@@ -74,7 +74,7 @@ def requires_password(f):
 def home():
     if restock_deque:
         product = restock_deque.popleft()
-        area = f"{product.split('_')[0]} area" 
+        area = f"{product.split('_')[0]} Area" 
         requests.post(f'http://127.0.0.1:5000/api/restock', json={'target_area': area, 'target_product': product, 'Server': True})
         print("success to send restock request to ui")
         return redirect(url_for('restock'))
@@ -121,7 +121,7 @@ def create_restock():
     while restock_deque:
         product = restock_deque.popleft()
         if product != data['target_product']:
-            area = f"{product.split('_')[0]} area"
+            area = f"{product.split('_')[0]} Area"
             new_task = Restock(target_area=area, target_product=product)
             db.session.add(new_task)
     db.session.commit()
@@ -215,5 +215,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.drop_all() # reset the database
         db.create_all()
-    socketio.run(app, debug=True)
+    socketio.run(app)
     # app.run(debug=True)

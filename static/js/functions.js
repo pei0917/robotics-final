@@ -45,8 +45,18 @@ function showCompletionPopup(targetArea, targetProduct) {
 
 // Modify the pop up window text
 function showPopupAndWait(message) {
+
+    closePopup();
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'overlay';
+    document.body.appendChild(overlay);
+
+    // Create popup
+    const popup = document.createElement('div');
+    popup.id = 'completionPopup';
+    popup.className = 'p-6 text-center w-96';
     return new Promise((resolve) => {
-        const popup = document.getElementById('completionPopup');
         popup.innerHTML = `
             <div class="flex justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400 mr-1" viewBox="0 0 24 24" fill="currentColor">
@@ -64,6 +74,7 @@ function showPopupAndWait(message) {
                 OK
             </button>
         `;
+        document.body.appendChild(popup);
         const okButton = document.getElementById('popupOkButton');
         okButton.addEventListener('click', () => {
             closePopup();
