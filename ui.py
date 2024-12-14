@@ -128,10 +128,10 @@ def create_restock():
     if data.get("Server"):
         try:
             response = requests.post(f"{NAV_ENDPOINT}/navigate2stock", json={"c_stock": coordinate_dict.get("Stock")})
-            print("Navigate request success")
+            print("Navigate2stock request success")
             return response.json(), 200
         except Exception as e:
-            print(f"Navigation request fail: {str(e)}")
+            print(f"Navigate2stock request fail: {str(e)}")
             return {"error": f"product restock error: {str(e)}"}, 500
     socketio.emit('new_task', {'url': '/restock'})
     return jsonify({

@@ -22,7 +22,6 @@ class ServerService:
         print("Setting up routes...")
         self.app.route('/api/set_product', methods=['POST'])(self.set_product)
         self.app.route('/navigate2product_end', methods=['POST'])(self.navigate2product_end)
-        self.app.route('/navigate2stock', methods=['POST'])(self.navigate2stock)
     
     def run(self):
         self.app.run(port=self.server_port, debug=True, use_reloader=False)
@@ -107,16 +106,6 @@ class ServerService:
         else:
             results = self.execute_ui_and_vision()
             return ({"status": "success", "combined_result": results}), 200
-
-    def navigate2stock(self):
-        print("Start navigate to stock")
-        try:
-            response = requests.post(f"{self.NAV_ENDPOINT}/navigate2stock", json={"c_stock": coordinate_dict.get("Stock")})
-            print("Navigate request success")
-            return response.json(), 200
-        except Exception as e:
-            print(f"Navigation request fail: {str(e)}")
-            return {"error": f"product restock error: {str(e)}"}, 500
 
 if __name__ == '__main__':
     ServerService().run()
