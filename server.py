@@ -1,10 +1,9 @@
 import queue
 from flask import Flask, request, jsonify
 import requests
-import os
 from concurrent.futures import ThreadPoolExecutor
-# from vision import check_product
-from tmp import check_product
+# from shared import check_product, coordinate_dict
+from api import check_product, coordinate_dict
 class ServerService:
     def __init__(self, ui_port=5000, nav_port=5001, server_port=5003):
         super().__init__()
@@ -14,14 +13,6 @@ class ServerService:
         self.server_port = server_port
         self.task = queue.Queue()
 
-        self.coordinate_dict = {
-            'Entrance': 1,
-            'Vase Area': 2,
-            'Keyboard Area': 3,
-            'Bottle Area': 4,
-            'Cup Area': 5,
-            'Stock': 6
-        }   
 
         self._setup_routes()
     
@@ -43,7 +34,7 @@ class ServerService:
         self.task.put((target_area, id, task_type, target_product))
         try:
             response = requests.post(f"{self.NAV_ENDPOINT}/navigate2product", 
-                                    json={"c_product": self.coordinate_dict.get(target_area)})
+                                    json={"c_product": coordinate_dict.get(target_area)})
             return response.json()
         except Exception as e :
             print(f"Set product error: {str(e)}")
@@ -105,7 +96,7 @@ class ServerService:
     def navigate2stock(self):
         print("Start navigate to stock")
         try:
-            response = requests.post(f"{self.NAV_ENDPOINT}/navigate2stock", json={"c_stock": self.coordinate_dict.get("Stock")})
+            response = requests.post(f"{self.NAV_ENDPOINT}/navigate2stock", json={"c_stock": coordinate_dict.get("Stock")})
             print("Navigate request success")
             return response.json(), 200
         except Exception as e:

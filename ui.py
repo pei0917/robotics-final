@@ -8,8 +8,8 @@ from datetime import datetime
 import requests
 import os
 from threading import Thread
-# from vision import restock_deque
-from tmp import restock_deque
+# from shared import restock_deque
+from api import restock_deque
 import re
 from collections import deque
 

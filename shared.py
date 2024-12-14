@@ -1,7 +1,4 @@
-from flask import Flask, request, jsonify
-import requests
 import time
-import os
 import cv2
 from ultralytics import YOLO
 from collections import Counter
@@ -10,6 +7,14 @@ import re
 from collections import deque
 restock_deque = deque()
 
+coordinate_dict = {
+    'Entrance': 1,
+    'Vase Area': 2,
+    'Keyboard Area': 3,
+    'Bottle Area': 4,
+    'Cup Area': 5,
+    'Stock': 6
+}
 
 def check_product(target_product):
 

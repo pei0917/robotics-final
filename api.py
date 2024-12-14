@@ -2,6 +2,16 @@ import requests
 import time
 import re
 from collections import deque
+
+coordinate_dict = {
+    'Entrance': 1,
+    'Vase Area': 2,
+    'Keyboard Area': 3,
+    'Bottle Area': 4,
+    'Cup Area': 5,
+    'Stock': 6
+}
+
 restock_deque = deque()
 
 def robot_arrived(task_id, target_area, target_product):
