@@ -1,7 +1,7 @@
 import queue
 from flask import Flask, request, jsonify
 import requests
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 # from shared import check_product, coordinate_dict
 from api import check_product, coordinate_dict
 class ServerService:
@@ -11,8 +11,10 @@ class ServerService:
         self.UI_ENDPOINT = f"http://127.0.0.1:{ui_port}"
         self.NAV_ENDPOINT = f"http://127.0.0.1:{nav_port}"
         self.server_port = server_port
+        self.id = None
+        self.target_area = None
+        self.target_product = None
         self.task = queue.Queue()
-
 
         self._setup_routes()
     
@@ -40,58 +42,69 @@ class ServerService:
             print(f"Set product error: {str(e)}")
             return {"error": f"set product error: {str(e)}"}
     
+    def call_ui(self):
+        try:
+            response = requests.post(f'{self.UI_ENDPOINT}/api/robot/arrived',
+                                        json={'id': self.id, 'target_area': self.target_area, 'target_product': self.target_product})
+            print("Successfully informed UI that robot arrived.")
+            return response.json()
+        except Exception as e:
+            print(f"Error notifying UI: {e}")
+            return {"error": str(e)}
+
+    def call_vision(self):
+        try:
+            product = check_product(self.target_product)
+            if product != "None":
+                requests.post(f'{self.UI_ENDPOINT}/api/append_restock_deque', json={'product': self.target_product})
+                print(f"Successfully call the append restock deque api to append {self.target_product}")
+                return {"status": "restock", "product": self.target_product}
+            else:
+                print("No need to restock after scanning.")
+                return {"status": "no_restock"}
+        except Exception as e:
+            return {"error": str(e)}
+
+    def execute_ui_and_vision(self):
+        tasks = {
+            "UI": self.call_ui,
+            "Vision": self.call_vision()
+        }
+
+        results = {}
+
+        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+            future_to_task = {executor.submit(task): name for name, task in tasks.items()}
+
+            for future in as_completed(future_to_task):
+                task_name = future_to_task[future]
+                try:
+                    results[task_name] = future.result()
+                except Exception as e:
+                    results[task_name] = {"error": f"Error occurred in {task_name}: {str(e)}"}
+
+        return results
+
     def navigate2product_end(self):
         data = request.json
         state = data.get("state")
         if not state:
-            print("Navigate state fail")
+            print("Navigate to product fail")
             return
         else:
-            print("Navigation task successed.")
+            print("Navigation to product successed.")
         
         target_area, id, task_type, target_product = self.task.get()
         print(f"Navigate state: {target_area}, {id}, {task_type}, {target_product}")
-
-        def call_ui():
-            try:
-                response = requests.post(f'{self.UI_ENDPOINT}/api/robot/arrived',
-                                            json={'id': id, 'target_area': target_area, 'target_product': target_product})
-                print("Successfully informed UI that robot arrived.")
-                return response.json()  # Return the JSON content
-            except Exception as e:
-                print(f"Error notifying UI: {e}")
-                return {"error": str(e)}
-
-        def call_vision():
-            try:
-                product = check_product(target_product)
-                if product != "None":
-                    requests.post(f'{self.UI_ENDPOINT}/api/append_restock_deque', json={'product': target_product})
-                    print(f"Successfully call the append restock deque api to append {target_product}")
-                    return {"status": "restock", "product": target_product}
-                else:
-                    print("No need to restock after scanning.")
-                    return {"status": "no_restock"}
-            except Exception as e:
-                return {"error": str(e)}
+        self.id = id
+        self.target_area = target_area
+        self.target_product = target_product
         
         if task_type == "restock":
-            ui_result = call_ui()
-            return ({"status": "success", "ui_result": ui_result}), 200
-        
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            futures = {
-                executor.submit(call_ui): "UI",
-                executor.submit(call_vision): "vision"
-            }
-            results = {}
-            for future in futures:
-                try:
-                    results[futures[future]] = future.result()
-                except Exception as e:
-                    results[futures[future]] = {"error": f"UI or Vision error occurred: {str(e)}"}
-
-        return ({"status": "success","results": results}), 200
+            return ({"status": "success"}), 200
+        else:
+            results = self.execute_ui_and_vision()
+            return ({"status": "success","combined_result": results}), 200
 
     def navigate2stock(self):
         print("Start navigate to stock")

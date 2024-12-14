@@ -37,7 +37,7 @@ class NavigationService:
         self.app = Flask(__name__)
         self.SERVER_ENDPOINT = f"http://127.0.0.1:{server_port}"
         self.nav_port = nav_port
-
+        
         self._setup_routes()
 
     def _setup_routes(self):
@@ -58,13 +58,13 @@ class NavigationService:
             requests.post(f"{self.SERVER_ENDPOINT}/navigate2product_end",
                           json={"state": state},
                           timeout=10)
-            print("Success to return navigating success to server.")
+            print("Return navigating success to server.")
             return jsonify({
                 'status': 'success', 
                 'message': 'Robot arrived product area!'
             }), 200
         except Exception as e:
-            print(f"fail to return navigate state {str(e)}")
+            print(f"Return navigating failed {str(e)}")
             return jsonify({
                 'status': 'fail', 
                 'message': 'Robot failed to arrive product area!'
@@ -88,7 +88,7 @@ class NavigationService:
             }), 500
 
     def navigating(self, coord):
-        time.sleep(5)
+        time.sleep(3)
         return True
         x, y, yaw = coord
 

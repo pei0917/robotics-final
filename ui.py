@@ -8,8 +8,8 @@ from datetime import datetime
 import requests
 import os
 from threading import Thread
-# from shared import restock_deque
-from api import restock_deque
+# from shared import restock_deque, coordinate_dict
+from api import restock_deque, coordinate_dict
 import re
 from collections import deque
 
@@ -17,7 +17,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///robot_tasks.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 SECRET_PASSWORD = 'peipei'
-
+NAV_ENDPOINT = "http://127.0.0.1:5001"
+SERVER_ENDPOINT = "http://127.0.0.1:5003"
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 socketio = SocketIO(app)
@@ -73,12 +74,9 @@ def requires_password(f):
 def home():
     if restock_deque:
         product = restock_deque.popleft()
-        Area = f"{product.split('_')[0]} Area" 
-        requests.post(f'http://127.0.0.1:5000/api/restock', json={'target_area': Area, 'target_product': product, 'Server': True})
+        area = f"{product.split('_')[0]} area" 
+        requests.post(f'http://127.0.0.1:5000/api/restock', json={'target_area': area, 'target_product': product, 'Server': True})
         print("success to send restock request to ui")
-        while restock_deque:
-            product = restock_deque.popleft()
-            requests.post(f'http://127.0.0.1:5000/api/restock', json={'target_area': Area, 'target_product': product})
         return redirect(url_for('restock'))
     else:
         return render_template('home.html')
@@ -118,11 +116,25 @@ def create_restock():
         target_area=data['target_area'],
         target_product=data['target_product']
     )
-    if data.get("Server"):
-        requests.post("http://127.0.0.1:5003/navigate2stock")
-    socketio.emit('new_task', {'url': '/restock'})
     db.session.add(new_task)
+
+    while restock_deque:
+        product = restock_deque.popleft()
+        if product != data['target_product']:
+            area = f"{product.split('_')[0]} area"
+            new_task = Restock(target_area=area, target_product=product)
+            db.session.add(new_task)
     db.session.commit()
+
+    if data.get("Server"):
+        try:
+            response = requests.post(f"{NAV_ENDPOINT}/navigate2stock", json={"c_stock": coordinate_dict.get("Stock")})
+            print("Navigate request success")
+            return response.json(), 200
+        except Exception as e:
+            print(f"Navigation request fail: {str(e)}")
+            return {"error": f"product restock error: {str(e)}"}, 500
+    socketio.emit('new_task', {'url': '/restock'})
     return jsonify({
         'status': 'success'
     })
@@ -155,7 +167,7 @@ def update_task_status(task_type, task_id):
     def send_post_request():
         try:
             requests.post(
-                "http://127.0.0.1:5003/api/set_product",
+                f"{SERVER_ENDPOINT}/api/set_product",
                 json={"target_area": target_area, "id": id, "task_type": task_type, "target_product": target_product}
             )
         except Exception as e:
@@ -178,7 +190,6 @@ def robot_arrived():
     target_prodict = data['target_product']
     try:
         socketio.emit('robot_arrived', {'taskId': task_id, 'targetArea': target_area, 'targetProduct': target_prodict})
-        
         return jsonify({
             'status': 'success', 
             'message': 'Robot arrived!'
@@ -193,8 +204,11 @@ def robot_arrived():
 def add_to_restock_deque():
     data = request.json
     product = data['product']
-    restock_deque.append(product)
-    print(f"Successfully appended {product} into restock list via API")
+    if product != "None":
+        restock_deque.append(product)
+        print(f"Successfully appended {product} into restock list via API")
+    else:
+        print("Product is None. Do nothing")
     return jsonify({"status": "success", "product": product}), 200
 
 if __name__ == '__main__':
