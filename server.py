@@ -45,7 +45,7 @@ class ServerService:
     def call_ui(self):
         try:
             response = requests.post(f'{self.UI_ENDPOINT}/api/robot/arrived',
-                                        json={'id': self.id, 'target_area': self.target_area, 'target_product': self.target_product})
+                                        json={'id': self.id, 'target_area': self.target_area, 'target_product': self.target_product, 'task_type': self.task_type})
             print("Successfully informed UI that robot arrived.")
             return response.json()
         except Exception as e:
@@ -99,6 +99,7 @@ class ServerService:
         self.id = id
         self.target_area = target_area
         self.target_product = target_product
+        self.task_type = task_type
         
         if task_type == "restock":
             results = self.call_ui()

@@ -86,13 +86,10 @@ function showPopupAndWait(message) {
 
 // Handle restock option selection
 async function handleRestockOption(targetArea, targetProduct) {
-    await showPopupAndWait('We have announced the clerk to restock. You can go around and come back after 5 minutes.');
     const data = {
-        target_area: targetArea,
-        target_product: targetProduct,
-        Server: true,
+        product: targetProduct,
     };
-    fetch(`/api/restock`, {
+    fetch(`/api/append_restock_deque`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -101,7 +98,7 @@ async function handleRestockOption(targetArea, targetProduct) {
     }).catch(error => {
         console.error('Error:', error);
     });
-    window.location.href = '/restock';
+    await showPopupAndWait('We have announced the clerk to restock. You can go around and come back after 5 minutes.');
 }
 
 // Handle form submission

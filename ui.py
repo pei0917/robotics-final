@@ -116,11 +116,12 @@ def create_restock():
         target_product=data['target_product']
     )
     db.session.add(new_task)
+    print("JJJJJJJJJJJJJJJJJJJJJJJJJ", data['target_product'])
 
     while restock_deque:
         product = restock_deque.popleft()
         if product != data['target_product']:
-            area = f"{product.split('_')[0]} Area"
+            area = f"{product.split('_')[1]} Area"
             new_task = Restock(target_area=area, target_product=product)
             db.session.add(new_task)
     db.session.commit()
@@ -187,6 +188,7 @@ def robot_arrived():
     task_id = data['id']
     target_area = data['target_area']
     target_prodict = data['target_product']
+    task_type = data['task_type']
     try:
         socketio.emit('robot_arrived', {'taskId': task_id, 'targetArea': target_area, 'targetProduct': target_prodict})
         return jsonify({
@@ -203,11 +205,11 @@ def robot_arrived():
 def add_to_restock_deque():
     data = request.json
     product = data['product']
-    if product != "None":
+    if product != "None" and product not in restock_deque:
         restock_deque.append(product)
         print(f"Successfully appended {product} into restock list via API")
     else:
-        print("Product is None. Do nothing")
+        print("Product is None or already in. Do nothing")
     return jsonify({"status": "success", "product": product}), 200
 
 if __name__ == '__main__':

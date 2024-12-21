@@ -66,11 +66,11 @@ def check_product(target_product):
     print("--------------------END OF DETECTION--------------------")
     print("Maximum detections:", max_detections)
 
-    product = "None"        
     if target_product in missing_objects:
         detected_count = max_detections.get(target_product, 0)
         print(
             f"{target_product}: Detected {detected_count}, Required {required_counts[target_product]}")
+        return target_product
     else:
         print(f"Required {target_product} met its count.")
-    return product
+        return "None"
