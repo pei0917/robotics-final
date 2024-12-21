@@ -19,7 +19,7 @@ SECRET_PASSWORD = 'peipei'
 NAV_ENDPOINT = "http://127.0.0.1:5001"
 SERVER_ENDPOINT = "http://127.0.0.1:5003"
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)  # Initialize Flask-Migrate
+migrate = Migrate(app, db) 
 socketio = SocketIO(app)
 
 item = {
@@ -116,7 +116,6 @@ def create_restock():
         target_product=data['target_product']
     )
     db.session.add(new_task)
-    print("JJJJJJJJJJJJJJJJJJJJJJJJJ", data['target_product'])
 
     while restock_deque:
         product = restock_deque.popleft()
