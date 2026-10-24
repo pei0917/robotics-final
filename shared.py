@@ -1,6 +1,6 @@
+import os
 import time
-import cv2
-from ultralytics import YOLO
+import threading
 from collections import Counter
 import logging
 import re
@@ -16,25 +16,47 @@ coordinate_dict = {
     'Stock': 6
 }
 
+# Webcam device index used by check_product(); override with ROBOT_CAMERA_INDEX.
+CAMERA_INDEX = int(os.getenv("ROBOT_CAMERA_INDEX", "2"))
+
+_vision_lock = threading.Lock()
+_yolo_model = None
+
+def _load_vision():
+    """Lazily import the vision stack and cache the YOLO model across calls.
+
+    cv2 / ultralytics are imported here instead of at module level so that
+    ui.py, which only needs restock_deque / coordinate_dict, can import this
+    module without having them installed.
+    """
+    global _yolo_model
+    import cv2
+    from ultralytics import YOLO
+    with _vision_lock:
+        if _yolo_model is None:
+            logging.getLogger('ultralytics').setLevel(logging.ERROR)
+            _yolo_model = YOLO('yolov8n.pt')
+    return cv2, _yolo_model
+
 def check_product(target_product):
+    try:
+        cv2, model = _load_vision()
+    except ImportError as e:
+        print(f"Error: vision dependencies not available ({e}).")
+        return "None"
 
     target_product = re.sub(r'_\d+', '', target_product).lower()
-    logging.getLogger('ultralytics').setLevel(logging.ERROR)
-    model = YOLO('yolov8n.pt')
     required_counts = {"vase": 1, "keyboard": 3, "bottle": 1, "cup": 1}
     max_detections = {key: 0 for key in required_counts}
 
-    if 'cap' in locals():
-        cap.release()
-    cv2.destroyAllWindows()
     detection_duration = 3
     start_time = time.time()
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(CAMERA_INDEX)
     if not cap.isOpened():
-        print("Error: Unable to access the webcam.")
-        exit()
+        print(f"Error: Unable to access the webcam (index {CAMERA_INDEX}).")
+        return "None"
 
-    print("Starting detection. Press 'q' to quit.")
+    print(f"Starting detection for {detection_duration}s.")
     while True:
         if time.time() - start_time > detection_duration:
             break
@@ -49,14 +71,6 @@ def check_product(target_product):
         for label in required_counts.keys():
             max_detections[label] = max(
                 max_detections[label], label_counts.get(label, 0))
-        annotated_frame = results[0].plot()
-        y_offset = 50
-        for label, count in max_detections.items():
-            cv2.putText(annotated_frame, f"{label}: {count}",
-                        (10, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            y_offset += 30
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
     cap.release()
     missing_objects = [
         obj for obj, required in required_counts.items()

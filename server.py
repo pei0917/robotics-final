@@ -14,6 +14,7 @@ class ServerService:
         self.id = None
         self.target_area = None
         self.target_product = None
+        self.task_type = None
         self.task = queue.Queue()
 
         self._setup_routes()
@@ -68,7 +69,7 @@ class ServerService:
     def execute_ui_and_vision(self):
         tasks = {
             "UI": self.call_ui,
-            "Vision": self.call_vision()
+            "Vision": self.call_vision
         }
 
         results = {}
@@ -90,11 +91,15 @@ class ServerService:
         state = data.get("state")
         if not state:
             print("Navigate to product fail")
-            return
+            return jsonify({"status": "fail", "message": "Navigate to product fail"}), 400
         else:
-            print("Navigation to product successed.")
+            print("Navigation to product succeeded.")
         
-        target_area, id, task_type, target_product = self.task.get()
+        try:
+            target_area, id, task_type, target_product = self.task.get_nowait()
+        except queue.Empty:
+            print("No pending task for this navigation callback")
+            return jsonify({"status": "fail", "message": "No pending task"}), 400
         print(f"Navigate state: {target_area}, {id}, {task_type}, {target_product}")
         self.id = id
         self.target_area = target_area

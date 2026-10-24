@@ -21,10 +21,10 @@ def robot_arrived(task_id, target_area, target_product):
         return response.json()
     except Exception as e:
         print(f"Error notifying server: {e}")
-def restock_prdouct(targer_area, target_product):
+def restock_product(target_area, target_product):
     try:
         response = requests.post(f'http://127.0.0.1:5000/api/restock',
-                                    json={'target_area': targer_area, 'target_product': target_product})
+                                    json={'target_area': target_area, 'target_product': target_product})
         return response.json()
     except Exception as e:
         print(f"Error notifying server: {e}")

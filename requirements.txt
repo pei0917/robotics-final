@@ -3,7 +3,7 @@ flask
 flask_migrate
 flask_socketIO
 flask_sqlalchemy
-openni
+opencv-python
 Requests
 SQLAlchemy
 ultralytics

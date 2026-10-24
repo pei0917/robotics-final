@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Flask-SQLAlchemy instance folder & sqlite databases (ui.py recreates robot_tasks.db on start)
+instance/
+*.db
+
+# YOLO weights auto-downloaded by ultralytics on first run
+*.pt
+
+# OS
+.DS_Store

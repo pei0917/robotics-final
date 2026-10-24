@@ -1,13 +1,18 @@
-#!/bin/bin/env python
+#!/usr/bin/env python
 
 from flask import Flask, request, jsonify
 import math
 import requests
 
-# import actionlib
-# import move_base_msgs.msg
-# import rospy
-# from tf.transformations import quaternion_from_euler
+# Load ROS if installed; otherwise fall back to simulation mode automatically.
+try:
+    import actionlib
+    import move_base_msgs.msg
+    import rospy
+    from tf.transformations import quaternion_from_euler
+    ROS_AVAILABLE = True
+except ImportError:
+    ROS_AVAILABLE = False
 import time
 
 dest = {
@@ -23,16 +28,16 @@ dest = {
 class NavigationService:
 
     def __init__(self, server_port=5003, nav_port=5001):
-        # rospy.init_node("http_api")
-
-        # self.cli = actionlib.SimpleActionClient(
-        #     "move_base", move_base_msgs.msg.MoveBaseAction)
-
-        # print("waiting move_base action server", end="", flush=True)
-        # while not self.cli.wait_for_server(rospy.Duration(1)):
-        #     print(".", end="", flush=True)
-
-        # print(" done")
+        if ROS_AVAILABLE:
+            rospy.init_node("http_api")
+            self.cli = actionlib.SimpleActionClient(
+                "move_base", move_base_msgs.msg.MoveBaseAction)
+            print("waiting move_base action server", end="", flush=True)
+            while not self.cli.wait_for_server(rospy.Duration(1)):
+                print(".", end="", flush=True)
+            print(" done")
+        else:
+            print("ROS not available, running navigation in simulation mode")
 
         self.app = Flask(__name__)
         self.SERVER_ENDPOINT = f"http://127.0.0.1:{server_port}"
@@ -48,8 +53,8 @@ class NavigationService:
         data = request.json
         c_product = data.get("c_product")
         if not c_product:
-            print("No product provide.")
-            return
+            print("No product provided.")
+            return jsonify({"status": "fail", "message": "No product provided"}), 400
         else:
             print(f"Get product: {c_product}")
 
@@ -88,8 +93,10 @@ class NavigationService:
             }), 500
 
     def navigating(self, coord):
-        time.sleep(3)
-        return True
+        if not ROS_AVAILABLE:
+            time.sleep(3)
+            return True
+
         x, y, yaw = coord
 
         print(f"navigating to ({x}, {y}, {yaw})", end="", flush=True)

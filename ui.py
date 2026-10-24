@@ -15,7 +15,7 @@ from collections import deque
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///robot_tasks.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-SECRET_PASSWORD = 'peipei'
+SECRET_PASSWORD = os.getenv("ROBOT_ADMIN_PWD", "admin")
 NAV_ENDPOINT = "http://127.0.0.1:5001"
 SERVER_ENDPOINT = "http://127.0.0.1:5003"
 db = SQLAlchemy(app)
@@ -73,7 +73,7 @@ def requires_password(f):
 def home():
     if restock_deque:
         product = restock_deque.popleft()
-        area = f"{product.split('_')[0]} Area" 
+        area = f"{product.split('_')[0].capitalize()} Area"
         requests.post(f'http://127.0.0.1:5000/api/restock', json={'target_area': area, 'target_product': product, 'Server': True})
         print("success to send restock request to ui")
         return redirect(url_for('restock'))
@@ -120,7 +120,7 @@ def create_restock():
     while restock_deque:
         product = restock_deque.popleft()
         if product != data['target_product']:
-            area = f"{product.split('_')[1]} Area"
+            area = f"{product.split('_')[0].capitalize()} Area"
             new_task = Restock(target_area=area, target_product=product)
             db.session.add(new_task)
     db.session.commit()
